@@ -317,9 +317,22 @@ def customer_lifetime_value(df: pd.DataFrame) -> List[Dict[str, Any]]:
     
     # Convert to list of dicts
     result = []
+    today = pd.Timestamp.now()
+    
     for _, row in clv_df.iterrows():
         # Handle NaN values in lifetime_days
         lifetime_days = 0 if pd.isna(row['lifetime_days']) else int(row['lifetime_days'])
+        
+        # Calculate recency (days since last order)
+        try:
+            last_order = row['last_order']
+            if pd.notna(last_order):
+                time_diff = today - last_order
+                recency_days = int(time_diff.days)
+            else:
+                recency_days = 0
+        except Exception as e:
+            recency_days = 0
         
         customer_data = {
             'customer': row['customer'],
@@ -330,7 +343,8 @@ def customer_lifetime_value(df: pd.DataFrame) -> List[Dict[str, Any]]:
             'avg_order_value': round(float(row['avg_order_value']), 2),
             'first_order_date': row['first_order'].isoformat(),
             'last_order_date': row['last_order'].isoformat(),
-            'lifetime_days': lifetime_days
+            'lifetime_days': lifetime_days,
+            'recency_days': recency_days
         }
         
         # Add Instagram if available
