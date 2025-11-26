@@ -153,7 +153,7 @@ def join_transactions(orders_df: pd.DataFrame,
     
     # Select and order columns
     column_order = [
-        'Order_Date', 'Order_ID', 'Channel', 'Customer_Name', 'Instagram',
+        'Order_Date', 'Order_ID', 'Channel', 'Customer_Name', 'Instagram', 'Phone',
         'SKU', 'Collection', 'Product_Name', 'Dog_Breed', 
         'Shirt_Color', 'Size', 'Qty', 'Unit_Price_THB', 
         'Line_Subtotal', 'COGS_THB', 'Line_Profit'

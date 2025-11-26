@@ -294,13 +294,20 @@ def customer_lifetime_value(df: pd.DataFrame) -> List[Dict[str, Any]]:
     if 'Instagram' in df.columns:
         agg_dict['Instagram'] = 'first'
     
+    # Add Phone if available
+    if 'Phone' in df.columns:
+        agg_dict['Phone'] = 'first'
+    
     clv_df = df.groupby('Customer_Name').agg(agg_dict).reset_index()
     
-    # Flatten column names
+    # Flatten column names - build dynamically
+    column_names = ['customer', 'total_revenue', 'total_profit', 'total_orders', 'total_quantity', 'first_order', 'last_order']
     if 'Instagram' in df.columns:
-        clv_df.columns = ['customer', 'total_revenue', 'total_profit', 'total_orders', 'total_quantity', 'first_order', 'last_order', 'instagram']
-    else:
-        clv_df.columns = ['customer', 'total_revenue', 'total_profit', 'total_orders', 'total_quantity', 'first_order', 'last_order']
+        column_names.append('instagram')
+    if 'Phone' in df.columns:
+        column_names.append('phone')
+    
+    clv_df.columns = column_names
     
     # Calculate average order value
     clv_df['avg_order_value'] = clv_df['total_revenue'] / clv_df['total_orders']
@@ -330,6 +337,11 @@ def customer_lifetime_value(df: pd.DataFrame) -> List[Dict[str, Any]]:
         if 'instagram' in row.index:
             instagram = row['instagram'] if pd.notna(row['instagram']) and row['instagram'] != '' else None
             customer_data['instagram'] = instagram
+        
+        # Add Phone if available
+        if 'phone' in row.index:
+            phone = row['phone'] if pd.notna(row['phone']) and row['phone'] != '' else None
+            customer_data['phone'] = phone
         
         result.append(customer_data)
     
