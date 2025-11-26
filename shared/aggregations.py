@@ -276,22 +276,31 @@ def customer_lifetime_value(df: pd.DataFrame) -> List[Dict[str, Any]]:
         df: Transactions dataframe
         
     Returns:
-        list: Customer CLV metrics with aggregated spending data
+        list: Customer CLV metrics with aggregated spending data including Instagram handle
     """
     if df.empty:
         return []
     
     # Aggregate by customer
-    clv_df = df.groupby('Customer_Name').agg({
+    agg_dict = {
         'Line_Subtotal': 'sum',
         'Line_Profit': 'sum',
         'Order_ID': 'nunique',
         'Qty': 'sum',
         'Order_Date': ['min', 'max']
-    }).reset_index()
+    }
+    
+    # Add Instagram if available
+    if 'Instagram' in df.columns:
+        agg_dict['Instagram'] = 'first'
+    
+    clv_df = df.groupby('Customer_Name').agg(agg_dict).reset_index()
     
     # Flatten column names
-    clv_df.columns = ['customer', 'total_revenue', 'total_profit', 'total_orders', 'total_quantity', 'first_order', 'last_order']
+    if 'Instagram' in df.columns:
+        clv_df.columns = ['customer', 'total_revenue', 'total_profit', 'total_orders', 'total_quantity', 'first_order', 'last_order', 'instagram']
+    else:
+        clv_df.columns = ['customer', 'total_revenue', 'total_profit', 'total_orders', 'total_quantity', 'first_order', 'last_order']
     
     # Calculate average order value
     clv_df['avg_order_value'] = clv_df['total_revenue'] / clv_df['total_orders']
@@ -305,7 +314,7 @@ def customer_lifetime_value(df: pd.DataFrame) -> List[Dict[str, Any]]:
         # Handle NaN values in lifetime_days
         lifetime_days = 0 if pd.isna(row['lifetime_days']) else int(row['lifetime_days'])
         
-        result.append({
+        customer_data = {
             'customer': row['customer'],
             'total_revenue': round(float(row['total_revenue']), 2),
             'total_profit': round(float(row['total_profit']), 2),
@@ -315,7 +324,14 @@ def customer_lifetime_value(df: pd.DataFrame) -> List[Dict[str, Any]]:
             'first_order_date': row['first_order'].isoformat(),
             'last_order_date': row['last_order'].isoformat(),
             'lifetime_days': lifetime_days
-        })
+        }
+        
+        # Add Instagram if available
+        if 'instagram' in row.index:
+            instagram = row['instagram'] if pd.notna(row['instagram']) and row['instagram'] != '' else None
+            customer_data['instagram'] = instagram
+        
+        result.append(customer_data)
     
     # Sort by total revenue descending
     result.sort(key=lambda x: x['total_revenue'], reverse=True)
