@@ -302,6 +302,9 @@ def customer_lifetime_value(df: pd.DataFrame) -> List[Dict[str, Any]]:
     # Convert to list of dicts
     result = []
     for _, row in clv_df.iterrows():
+        # Handle NaN values in lifetime_days
+        lifetime_days = 0 if pd.isna(row['lifetime_days']) else int(row['lifetime_days'])
+        
         result.append({
             'customer': row['customer'],
             'total_revenue': round(float(row['total_revenue']), 2),
@@ -311,7 +314,7 @@ def customer_lifetime_value(df: pd.DataFrame) -> List[Dict[str, Any]]:
             'avg_order_value': round(float(row['avg_order_value']), 2),
             'first_order_date': row['first_order'].isoformat(),
             'last_order_date': row['last_order'].isoformat(),
-            'lifetime_days': int(row['lifetime_days'])
+            'lifetime_days': lifetime_days
         })
     
     # Sort by total revenue descending
