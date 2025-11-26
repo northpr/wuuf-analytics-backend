@@ -145,6 +145,14 @@ def join_transactions(orders_df: pd.DataFrame,
     # Convert Order_Date to datetime
     transactions['Order_Date'] = pd.to_datetime(transactions['Order_Date'], errors='coerce')
     
+    # Clean phone numbers - remove dashes and keep as string with leading zeros
+    if 'Phone' in transactions.columns:
+        transactions['Phone'] = transactions['Phone'].astype(str).str.replace('-', '', regex=False).str.replace(' ', '', regex=False)
+        # Replace 'nan' string with empty string
+        transactions.loc[transactions['Phone'] == 'nan', 'Phone'] = ''
+        # Add leading zero for Thai phone numbers (9 digits -> 0 + 9 digits = 10 digits)
+        transactions.loc[(transactions['Phone'] != '') & (transactions['Phone'].str.len() == 9), 'Phone'] = '0' + transactions.loc[(transactions['Phone'] != '') & (transactions['Phone'].str.len() == 9), 'Phone']
+    
     # Ensure numeric columns are proper numeric types
     numeric_columns = ['Qty', 'Unit_Price_THB', 'Line_Subtotal', 'COGS_THB', 'Line_Profit']
     for col in numeric_columns:
