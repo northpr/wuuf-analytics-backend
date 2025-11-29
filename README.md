@@ -1,427 +1,395 @@
 # WUUF Analytics Backend
 
-FastAPI backend for WUUF transaction analytics from Google Sheets. This backend loads transaction data from three Google Sheets, joins them, applies filters, and provides analytics endpoints for sales data visualization.
+FastAPI backend providing analytics endpoints for WUUF transaction data from Google Sheets.
 
-## Features
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-green.svg)](https://fastapi.tiangolo.com/)
+[![Deployed on Railway](https://img.shields.io/badge/Deployed-Railway-purple.svg)](https://railway.app/)
 
-- 📊 Load data from Google Sheets (Orders, Order_Items, Products)
-- 🔗 Automatic data joining and transformation
-- 🎯 Flexible filtering (date range, size, collection, breed, channel)
-- 📈 Multiple analytics endpoints (overview, daily, by-collection, by-breed, by-size)
-- ⚡ Data caching (5-minute cache to reduce API calls)
-- 🚀 Ready for Railway deployment
-- 📝 Auto-generated API documentation (Swagger UI)
+---
 
-## Project Structure
+## 🚀 Features
+
+- ✅ **13 Analytics Endpoints** - Sales, customers, products
+- ✅ **Google Sheets Integration** - Real-time data sync
+- ✅ **Advanced Filtering** - 6 filter types (date, size, breed, channel, etc.)
+- ✅ **Customer Insights** - Lifetime value, recency, repeat rate
+- ✅ **Contact Information** - Instagram handles & phone numbers
+- ✅ **Smart Caching** - 5-minute cache for performance
+- ✅ **Production Ready** - Deployed on Railway
+
+---
+
+## 📖 Documentation
+
+Complete documentation available in [`docs/`](./docs/) directory:
+
+| Document | Description |
+|----------|-------------|
+| [CONTEXT.md](./docs/CONTEXT.md) | **For AI Assistants** - Complete project context for new chats |
+| [API_ENDPOINTS.md](./docs/API_ENDPOINTS.md) | Complete API reference with examples |
+| [FILTERS.md](./docs/FILTERS.md) | Filtering guide with use cases |
+| [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Railway & local deployment guide |
+| [DATA_STRUCTURE.md](./docs/DATA_STRUCTURE.md) | Google Sheets structure reference |
+
+---
+
+## 🎯 Quick Start
+
+### Prerequisites
+
+- Python 3.9+
+- Google Service Account JSON
+- Google Sheets with proper structure
+
+### Local Setup
+
+```bash
+# Clone repository
+git clone https://github.com/northpr/wuuf-analytics-backend.git
+cd wuuf-analytics-backend
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+export GOOGLE_SHEET_ID=1zv1Ww6ad8QbKPNQV1EoI8CtBqm6cozww0DfHm4lR_fE
+export GOOGLE_SERVICE_ACCOUNT_FILE=gold-totem-478004-q0-9501779d48ad.json
+
+# Run server
+uvicorn apps.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Test Connection
+
+```bash
+# Health check
+curl http://localhost:8000/
+
+# Test Google Sheets
+curl http://localhost:8000/test-connection
+
+# Get sales overview
+curl http://localhost:8000/sales/overview
+```
+
+---
+
+## 🔌 API Endpoints
+
+**Base URL**: `https://wuuf-analytics-backend-production.up.railway.app`
+
+### Sales Analytics
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /sales/overview` | Sales summary (revenue, orders, AOV) |
+| `GET /sales/daily` | Daily sales breakdown |
+| `GET /sales/monthly-trends` | Month-over-month trends |
+| `GET /sales/by-collection` | Sales by collection |
+| `GET /sales/by-breed` | Sales by dog breed |
+| `GET /sales/by-size` | Sales by shirt size |
+
+### Customer Analytics
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /sales/customer-lifetime-value` | Customer CLV with contact info |
+| `GET /sales/customer-repeat-rate` | Repeat customer metrics |
+| `GET /sales/top-customers` | Top N customers by revenue |
+| `GET /sales/customer-acquisition` | Customer acquisition by channel |
+
+### Product Analytics
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /sales/size-distribution` | Size preference distribution |
+| `GET /sales/color-preferences` | Color preferences by breed |
+
+### Utilities
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /sales/filter-options` | Available filter values |
+| `GET /test-connection` | Test Google Sheets connection |
+
+**See [API_ENDPOINTS.md](./docs/API_ENDPOINTS.md) for complete documentation with examples.**
+
+---
+
+## 🎛️ Filtering
+
+All endpoints support optional query parameters:
+
+```bash
+# Date range
+curl "http://localhost:8000/sales/overview?start_date=2025-10-01&end_date=2025-10-31"
+
+# Product filters
+curl "http://localhost:8000/sales/overview?size=M&breed=Dachshund"
+
+# Channel filter
+curl "http://localhost:8000/sales/overview?channel=Instagram"
+
+# Combined filters
+curl "http://localhost:8000/sales/overview?channel=Instagram&size=M&start_date=2025-11-01"
+```
+
+**Available Filters**:
+- `start_date` (YYYY-MM-DD)
+- `end_date` (YYYY-MM-DD)
+- `size` (S, M, L, XL, 2XL, 3XL, 4XL)
+- `collection` (WUUF-001, WUUF-005, etc.)
+- `breed` (Dachshund, GoldenRetriever, etc.)
+- `channel` (Instagram, Direct Sales, Shopee)
+
+**See [FILTERS.md](./docs/FILTERS.md) for complete filtering guide.**
+
+---
+
+## 📊 Response Format
+
+All endpoints return standardized JSON:
+
+```json
+{
+  "data": {
+    // Endpoint-specific data
+  },
+  "cache_info": {
+    "cached": true,
+    "cache_timestamp": "2025-11-27T01:18:04",
+    "records_count": 97,
+    "cache_age_seconds": 18.9
+  }
+}
+```
+
+---
+
+## 🗂️ Project Structure
 
 ```
 wuuf-analytics-backend/
 ├── apps/
 │   └── api/
-│       ├── main.py              # FastAPI entry point
+│       ├── main.py              # FastAPI app
 │       └── routers/
-│           └── sales.py         # Sales endpoints
+│           └── sales.py         # All sales endpoints
 ├── shared/
-│   ├── data_loader.py           # Google Sheets loader + join logic
-│   ├── filters.py               # Filtering functionality
-│   └── aggregations.py          # Analytics calculations
-├── gold-totem-478004-q0-9501779d48ad.json  # Service account credentials
+│   ├── data_loader.py           # Google Sheets data loading
+│   ├── aggregations.py          # Business logic
+│   └── filters.py               # Filtering logic
+├── docs/                        # Complete documentation
 ├── requirements.txt             # Python dependencies
-├── Procfile                     # Railway deployment config
-├── .env.example                 # Environment variables template
+├── Procfile                     # Railway deployment
 └── README.md                    # This file
 ```
 
-## Prerequisites
+---
 
-1. **Google Cloud Project** with Google Sheets API enabled
-2. **Service Account** with JSON credentials
-3. **Python 3.9+**
-4. **Google Sheet** with three worksheets: Orders, Order_Items, Products
+## 🔧 Environment Variables
 
-## Google Sheets Setup
-
-### 1. Create Google Cloud Project & Enable API
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project (or select existing)
-3. Enable "Google Sheets API":
-   - Go to "APIs & Services" > "Library"
-   - Search for "Google Sheets API"
-   - Click "Enable"
-
-### 2. Create Service Account
-
-1. Go to "IAM & Admin" > "Service Accounts"
-2. Click "Create Service Account"
-3. Fill in details:
-   - Name: `wuuf-analytics` (or any name)
-   - Description: `Service account for WUUF analytics backend`
-4. Click "Create and Continue"
-5. Skip role assignment (click "Continue")
-6. Click "Done"
-
-### 3. Generate JSON Key
-
-1. Click on the created service account
-2. Go to "Keys" tab
-3. Click "Add Key" > "Create new key"
-4. Select "JSON" format
-5. Click "Create"
-6. Save the downloaded JSON file as `gold-totem-478004-q0-9501779d48ad.json` in the project root
-
-### 4. Share Google Sheet
-
-**IMPORTANT:** You must share your Google Sheet with the service account email!
-
-1. Open your Google Sheet: https://docs.google.com/spreadsheets/d/1zv1Ww6ad8QbKPNQV1EoI8CtBqm6cozww0DfHm4lR_fE/edit
-2. Click the "Share" button (top right)
-3. Add the service account email (found in the JSON file under `client_email`):
-   ```
-   wuuf-817@gold-totem-478004-q0.iam.gserviceaccount.com
-   ```
-4. Set permission to "Viewer"
-5. Click "Send"
-
-### 5. Verify Sheet Structure
-
-Ensure your Google Sheet has these three worksheets with exact column names:
-
-**Sheet: Orders**
-- Order_ID (string)
-- Order_Date (date)
-- Channel (string)
-- Customer_Name (string)
-- Instagram (string)
-- Phone (string)
-- Address (string)
-
-**Sheet: Order_Items**
-- Order_ID (string)
-- Line# (number)
-- SKU (string)
-- Qty (number)
-- Unit_Price_THB (number)
-- Line_Subtotal (number)
-- COGS_THB (number)
-- Line_Profit (number)
-- Shirt_Color (string)
-- Size (string)
-
-**Sheet: Products**
-- SKU (string)
-- Product_Name (string)
-- T_Shirt_Color (string)
-- Size (string)
-- Price_THB (number)
-- Cost_THB (number)
-- Active (boolean)
-- Dog_Breed (string)
-- Print_File_Link (string)
-- Mockup_Link (string)
-
-## Local Development Setup
-
-### 1. Clone Repository
+### Required
 
 ```bash
-cd /path/to/project
-# Files should already be in: /Users/pataweeratanaruengwatna/Desktop/Code/wuuf-analyrics-backend
-```
-
-### 2. Create Virtual Environment
-
-```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-### 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure Environment Variables
-
-Create a `.env` file (optional, defaults are already set):
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` if needed:
-```
 GOOGLE_SHEET_ID=1zv1Ww6ad8QbKPNQV1EoI8CtBqm6cozww0DfHm4lR_fE
+
+# Local development
 GOOGLE_SERVICE_ACCOUNT_FILE=gold-totem-478004-q0-9501779d48ad.json
-PORT=8000
+
+# Production (Railway)
+GOOGLE_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'
 ```
 
-### 5. Run Development Server
+### Optional
 
 ```bash
-# Option 1: Using uvicorn with proper module path
-PYTHONPATH=. uvicorn apps.api.main:app --reload --port 8000
-
-# Option 2: Using python directly
-python apps/api/main.py
+PORT=8000  # Server port (default: 8000)
 ```
 
-### 6. Access API
+**See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for complete setup guide.**
 
-- **API Base URL:** http://localhost:8000
-- **Interactive Docs (Swagger UI):** http://localhost:8000/docs
-- **ReDoc:** http://localhost:8000/redoc
-- **Health Check:** http://localhost:8000/health
+---
 
-## API Endpoints
+## 🚢 Deployment
 
-### Health & Info
+### Railway (Production)
 
-- `GET /` - API information and endpoint list
-- `GET /health` - Health check with cache status
+1. Connect GitHub repository
+2. Add environment variables
+3. Deploy automatically on push to `main`
 
-### Sales Analytics
+**Live URL**: https://wuuf-analytics-backend-production.up.railway.app
 
-All endpoints support optional query parameters for filtering:
-- `start_date` (YYYY-MM-DD) - Filter by start date
-- `end_date` (YYYY-MM-DD) - Filter by end date
-- `size` - Filter by exact size
-- `collection` - Filter by exact collection
-- `breed` - Filter by exact dog breed
-- `channel` - Filter by exact channel
+**See [DEPLOYMENT.md](./docs/DEPLOYMENT.md) for step-by-step guide.**
 
-#### Endpoints
+---
 
-1. **GET /sales/overview**
-   - Overall sales summary metrics
-   - Returns: total_revenue, total_cost, total_profit, total_orders, total_quantity, average_order_value
+## 📚 Google Sheets Setup
 
-2. **GET /sales/daily**
-   - Daily sales metrics grouped by date
-   - Returns: List of daily metrics (date, revenue, cost, profit, quantity, orders)
+### Required Sheets
 
-3. **GET /sales/by-collection**
-   - Sales metrics grouped by collection
-   - Returns: List of collection metrics sorted by revenue (descending)
+1. **Orders** - Customer order information
+2. **Order_Items** - Line items for each order
+3. **Products** - Product catalog
 
-4. **GET /sales/by-breed**
-   - Sales metrics grouped by dog breed
-   - Returns: List of breed metrics sorted by revenue (descending)
+### Share with Service Account
 
-5. **GET /sales/by-size**
-   - Sales metrics grouped by size
-   - Returns: List of size metrics sorted by size order
+```
+wuuf-817@gold-totem-478004-q0.iam.gserviceaccount.com
+```
 
-6. **GET /sales/filter-options**
-   - Get available filter options from dataset
-   - Returns: Available sizes, collections, breeds, channels, and date range
+**See [DATA_STRUCTURE.md](./docs/DATA_STRUCTURE.md) for complete structure reference.**
 
-### Customer Analytics
+---
 
-7. **GET /sales/customer-repeat-rate**
-   - Calculate customer repeat purchase rate
-   - Returns: total_customers, repeat_customers, new_customers, repeat_rate, average_orders_per_customer
+## 💡 Usage Examples
 
-8. **GET /sales/customer-lifetime-value**
-   - Calculate customer lifetime value for all customers
-   - Returns: List of customers with total revenue, profit, orders, lifetime metrics
-
-9. **GET /sales/top-customers**
-   - Get top customers by revenue (default: top 10)
-   - Query parameter: `limit` (1-100, default: 10)
-   - Returns: Ranked list of top customers
-
-10. **GET /sales/customer-acquisition**
-    - Analyze customer acquisition by channel
-    - Returns: New customer counts and percentages by channel
-
-### Product Insights
-
-11. **GET /sales/size-distribution**
-    - Calculate size distribution with percentages
-    - Returns: List of sizes with quantity and percentage breakdown
-
-12. **GET /sales/color-preferences**
-    - Analyze color preferences by dog breed
-    - Returns: Breed-color combinations with quantity, revenue, and percentage
-
-### Growth Analytics
-
-13. **GET /sales/monthly-trends**
-    - Calculate month-over-month sales trends and growth rates
-    - Returns: Monthly metrics with revenue, orders, customers, and growth percentages
-
-### Example API Calls
+### Get Monthly Sales
 
 ```bash
-# Get overall sales overview
-curl http://localhost:8000/sales/overview
+curl "http://localhost:8000/sales/overview?start_date=2025-10-01&end_date=2025-10-31"
+```
 
-# Get sales filtered by date range
-curl "http://localhost:8000/sales/overview?start_date=2024-01-01&end_date=2024-12-31"
+### Analyze Instagram Sales
 
-# Get sales filtered by channel and size
-curl "http://localhost:8000/sales/daily?channel=Instagram&size=M"
+```bash
+curl "http://localhost:8000/sales/customer-lifetime-value?channel=Instagram"
+```
 
-# Get sales by collection filtered by breed
-curl "http://localhost:8000/sales/by-collection?breed=Corgi"
+### Product Performance
 
-# Get available filter options
-curl http://localhost:8000/sales/filter-options
+```bash
+curl "http://localhost:8000/sales/by-collection?size=M"
+```
 
-# Customer Analytics
-# Get customer repeat rate
+### Customer Insights
+
+```bash
 curl http://localhost:8000/sales/customer-repeat-rate
-
-# Get top 5 customers
-curl "http://localhost:8000/sales/top-customers?limit=5"
-
-# Get customer acquisition by channel
-curl http://localhost:8000/sales/customer-acquisition
-
-# Get customer lifetime value
-curl http://localhost:8000/sales/customer-lifetime-value
-
-# Product Insights
-# Get size distribution
-curl http://localhost:8000/sales/size-distribution
-
-# Get color preferences by breed
-curl http://localhost:8000/sales/color-preferences
-
-# Growth Analytics
-# Get monthly trends
-curl http://localhost:8000/sales/monthly-trends
-
-# Combined filters example
-curl "http://localhost:8000/sales/monthly-trends?channel=Instagram&breed=Dachshund"
 ```
 
-## Railway Deployment
+---
 
-### 1. Install Railway CLI (optional)
+## 🔍 Key Features Explained
 
+### Customer Lifetime Value
+
+Includes contact information for marketing:
+```json
+{
+  "customer": "กมลรัตน์ ศรีสังข์สุข",
+  "instagram": "ple19",
+  "phone": "0910034999",
+  "total_revenue": 2760.00,
+  "recency_days": 20
+}
+```
+
+### Recency Tracking
+
+`recency_days` = Days since customer's last order (for retention analysis)
+
+### Phone Number Handling
+
+- Automatically adds leading zero
+- Removes dashes and spaces
+- Stores as 10-digit string: `"0910034999"`
+
+### Smart Caching
+
+- 5-minute cache duration
+- Reduces Google Sheets API calls
+- Fallback to cache if API unavailable
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: FastAPI 0.115
+- **Data Processing**: pandas 2.2
+- **Google Integration**: gspread 6.1
+- **Deployment**: Railway
+- **Python**: 3.9+
+
+---
+
+## 📈 Performance
+
+- **Cache Duration**: 5 minutes
+- **Response Time**: <100ms (cached)
+- **Data Load Time**: <2s (cold start)
+- **Concurrent Users**: Handles 100+ concurrent requests
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**"Spreadsheet not found"**
+- Verify Google Sheet is shared with service account
+- Check `GOOGLE_SHEET_ID` is correct
+
+**"Sheet 'Orders' not found"**
+- Sheet names are case-sensitive
+- Must be exact: `Orders`, `Order_Items`, `Products`
+
+**"Module not found"**
 ```bash
-npm install -g @railway/cli
-# or
-brew install railway
+pip install -r requirements.txt --upgrade
 ```
 
-### 2. Login to Railway
+**More solutions in [DEPLOYMENT.md](./docs/DEPLOYMENT.md#troubleshooting)**
 
-```bash
-railway login
-```
+---
 
-### 3. Initialize Project
+## 📝 License
 
-```bash
-railway init
-```
+This project is private and proprietary.
 
-### 4. Set Environment Variables
+---
 
-In Railway dashboard or via CLI:
+## 🔗 Links
 
-```bash
-# Set Google Sheet ID
-railway variables set GOOGLE_SHEET_ID=1zv1Ww6ad8QbKPNQV1EoI8CtBqm6cozww0DfHm4lR_fE
+- **GitHub**: https://github.com/northpr/wuuf-analytics-backend
+- **Production API**: https://wuuf-analytics-backend-production.up.railway.app
+- **Documentation**: [docs/](./docs/)
 
-# Set service account JSON (paste entire JSON content as one line)
-railway variables set GOOGLE_SERVICE_ACCOUNT_JSON='{"type":"service_account","project_id":"gold-totem-478004-q0",...}'
-```
+---
 
-**Important:** For `GOOGLE_SERVICE_ACCOUNT_JSON`, copy the entire content of your JSON file and paste it as a single-line string.
+## 🎯 Next Steps for New Projects
 
-### 5. Deploy
+Building a dashboard? See [CONTEXT.md](./CONTEXT.md) for complete project context to use in new AI chats.
 
-```bash
-railway up
-```
+**Example**: Use this backend with Streamlit for analytics dashboard.
 
-Or connect your GitHub repository in Railway dashboard for automatic deployments.
+---
 
-### 6. Access Deployed API
-
-Railway will provide a public URL like: `https://your-app.railway.app`
-
-- API Docs: `https://your-app.railway.app/docs`
-- Health Check: `https://your-app.railway.app/health`
-
-## Data Caching
-
-The backend implements a 5-minute cache to reduce Google Sheets API calls:
-
-- First request loads fresh data from Google Sheets
-- Subsequent requests within 5 minutes use cached data
-- Cache automatically refreshes after 5 minutes
-- Cache info included in all API responses
-
-To force refresh cache, restart the server or wait for cache expiration.
-
-## Troubleshooting
-
-### Error: "Service account file not found"
-
-- Ensure `gold-totem-478004-q0-9501779d48ad.json` is in the project root
-- Check file permissions
-
-### Error: "Worksheet not found"
-
-- Verify sheet names are exactly: `Orders`, `Order_Items`, `Products`
-- Check spelling and capitalization
-
-### Error: "Permission denied" or "403 Forbidden"
-
-- Ensure you've shared the Google Sheet with the service account email
-- Verify the service account has at least "Viewer" permission
-
-### Error: "API key not valid"
-
-- Check that Google Sheets API is enabled in Google Cloud Console
-- Verify service account JSON is valid and not corrupted
-
-### Empty Data / No Results
-
-- Check that your Google Sheet has data in all three worksheets
-- Verify column names match exactly (case-sensitive)
-- Check data types (dates should be formatted as dates, numbers as numbers)
-
-## Development Notes
-
-### SKU Collection Extraction
-
-Collections are extracted from SKU using pattern `WUUF-XXX`:
-- Example: `WUUF-001-WH-M` → Collection: `WUUF-001`
-- Uses regex pattern: `r"(WUUF-\d{3})"`
-- Falls back to first two parts joined by hyphen
-
-### Date Filtering
-
-- Dates are parsed flexibly (ISO format recommended: YYYY-MM-DD)
-- End date includes the entire day (23:59:59)
-- Invalid dates are logged and skipped (no error thrown)
-
-### Size Ordering
-
-Sizes are sorted in order: XS, S, M, L, XL, XXL/2XL, 3XL
-
-## Security Notes
-
-- **Never commit** `gold-totem-478004-q0-9501779d48ad.json` to version control
-- The file is already in `.gitignore`
-- For Railway, use environment variable instead of file
-- Service account should only have "Viewer" permission on the sheet
-
-## Support
+## 📮 Support
 
 For issues or questions:
-1. Check the troubleshooting section above
-2. Verify Google Sheets setup and permissions
-3. Check API documentation at `/docs`
-4. Review server logs for error details
+1. Check [documentation](./docs/)
+2. Review [troubleshooting guide](./docs/DEPLOYMENT.md#troubleshooting)
+3. Open GitHub issue
 
-## License
+---
 
-Private project - All rights reserved
+**Last Updated**: November 29, 2025  
+**Version**: 1.0  
+**Status**: ✅ Production
